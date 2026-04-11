@@ -1,0 +1,387 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0e1a;
+  color: #e0e6f0;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #0d1225;
+  border-bottom: 1px solid #1e2d4a;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #4fc3f7;
+  margin-right: 16px;
+}
+
+.ws-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #1a2340;
+}
+
+.header-right {
+  display: flex;
+  gap: 16px;
+}
+
+.stat {
+  font-size: 14px;
+  color: #8899aa;
+}
+
+.stat.anomaly {
+  color: #ff5252;
+  font-weight: 600;
+}
+
+/* MAIN LAYOUT */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* LEFT PANEL */
+.left-panel {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-right: 1px solid #1e2d4a;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.panel-header h2 {
+  font-size: 16px;
+  color: #4fc3f7;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #c62828;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #ef5350;
+}
+
+.btn-success {
+  background: #2e7d32;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #43a047;
+}
+
+.btn-primary {
+  background: #1565c0;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1976d2;
+}
+
+/* NETWORK GRID */
+.network-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px;
+  background: #0d1225;
+  border-radius: 8px;
+  border: 1px solid #1e2d4a;
+}
+
+.device-node {
+  width: 80px;
+  height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s;
+  border: 1px solid #1e3a5f;
+  background: #111827;
+}
+
+.device-node:hover {
+  transform: scale(1.05);
+  border-color: #4fc3f7;
+}
+
+.device-node.router { border-color: #1565c0; }
+.device-node.switch { border-color: #00695c; }
+.device-node.firewall { border-color: #6a1b9a; }
+.device-node.server { border-color: #e65100; }
+.device-node.load_balancer { border-color: #f9a825; }
+
+.device-node.anomalous {
+  background: #1a0a0a;
+  border-color: #ff5252 !important;
+  box-shadow: 0 0 12px rgba(255, 82, 82, 0.6);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 8px rgba(255, 82, 82, 0.6); }
+  50% { box-shadow: 0 0 20px rgba(255, 82, 82, 0.9); }
+  100% { box-shadow: 0 0 8px rgba(255, 82, 82, 0.6); }
+}
+
+.device-icon { font-size: 22px; }
+.device-name { font-size: 9px; color: #8899aa; margin-top: 4px; }
+
+.alert-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ff5252;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* DEVICE DETAIL */
+.device-detail {
+  margin-top: 12px;
+  padding: 12px;
+  background: #111827;
+  border-radius: 8px;
+  border: 1px solid #1e3a5f;
+  font-size: 13px;
+}
+
+.device-detail h3 {
+  display: flex;
+  justify-content: space-between;
+  color: #4fc3f7;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.device-detail p {
+  margin: 4px 0;
+  color: #8899aa;
+}
+
+.device-detail p strong {
+  color: #c0cfe0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #8899aa;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.risk {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.risk.critical { background: #c62828; color: white; }
+.risk.high { background: #e65100; color: white; }
+.risk.medium { background: #f9a825; color: black; }
+.risk.low { background: #2e7d32; color: white; }
+
+/* RIGHT PANEL */
+.right-panel {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* CHAT */
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-bottom: 1px solid #1e2d4a;
+  overflow: hidden;
+}
+
+.chat-panel h2 {
+  font-size: 16px;
+  color: #4fc3f7;
+  margin-bottom: 12px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.message {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.message-role { font-size: 16px; }
+
+.message-text {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+
+.message.user .message-text {
+  background: #1565c0;
+  color: white;
+}
+
+.message.assistant .message-text {
+  background: #111827;
+  border: 1px solid #1e2d4a;
+  color: #c0cfe0;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #111827;
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  color: #e0e6f0;
+  font-size: 12px;
+}
+
+.chat-input input:focus {
+  outline: none;
+  border-color: #4fc3f7;
+}
+
+/* INCIDENTS */
+.incidents-panel {
+  height: 280px;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.incidents-panel h2 {
+  font-size: 16px;
+  color: #4fc3f7;
+  margin-bottom: 12px;
+}
+
+.no-incidents {
+  color: #8899aa;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.incident-card {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #1e2d4a;
+  background: #111827;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.incident-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.incident-card p {
+  color: #8899aa;
+  margin: 3px 0;
+}
+
+.risk-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.risk-badge.critical { background: #c62828; color: white; }
+.risk-badge.high { background: #e65100; color: white; }
+.risk-badge.medium { background: #f9a825; color: black; }
+.risk-badge.low { background: #2e7d32; color: white; }
