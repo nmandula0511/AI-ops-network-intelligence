@@ -1,0 +1,140 @@
+"""
+models/responses.py
+===================
+Story 2 — Pydantic Models
+
+All response models coming OUT of the agent.
+Paul Edworth reads these to synthesize his answer to the CBU engineer.
+
+AI IDE NOTE:
+- Severity levels: GREEN / YELLOW / RED (match Kafka threshold logic)
+- GREEN:  0-60 min on LTE
+- YELLOW: 60-90 min on LTE
+- RED:    90+ min on LTE
+- requires_truck_roll should be False for 95%+ of cases — this is the WHOLE POINT
+"""
+
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
+from datetime import datetime
+
+
+class DeviceAnalysisResponse(BaseModel):
+    """Analysis result for a single Invincible WiFi device."""
+    
+    device_id: str
+    analysis_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Severity — maps directly to business thresholds
+    severity: Literal["GREEN", "YELLOW", "RED"]
+    lte_duration_minutes: int = Field(..., ge=0)
+    
+    # Root cause diagnosis
+    root_cause: str = Field(
+        ...,
+        description="Specific reason the device is stuck on LTE. "
+                    "Examples: 'Cable modem still offline', "
+                    "'Firmware bug v3.1.x fails auto-reconnect', "
+                    "'Customer rebooted modem but device not refreshed'"
+    )
+    confidence_score: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Agent confidence in root cause diagnosis (0.0 - 1.0)"
+    )
+    
+    # Recommended action
+    recommended_action: str = Field(
+        ...,
+        description="Primary recommended action. Start with self-service."
+    )
+    action_steps: list[str] = Field(
+        default_factory=list,
+        description="Step-by-step instructions. Ordered by least to most disruptive."
+    )
+    estimated_resolution_minutes: int = Field(
+        ...,
+        ge=0,
+        description="Estimated time for customer to resolve, in minutes"
+    )
+    
+    # Truck roll decision — the critical business metric
+    requires_truck_roll: bool = Field(
+        ...,
+        description="Only True if ALL self-service options have been exhausted. "
+                    "Truck rolls are expensive. Default assumption: False."
+    )
+    truck_roll_reason: Optional[str] = Field(
+        None,
+        description="Required if requires_truck_roll=True. Explain why self-service failed."
+    )
+    
+    # Cost context
+    estimated_daily_cost_usd: Optional[float] = Field(
+        None,
+        description="Estimated daily cost to Charter while device stays on LTE"
+    )
+
+
+class BulkAnalysisResponse(BaseModel):
+    """Response for bulk device analysis."""
+    
+    total_devices_analyzed: int
+    analysis_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Summary counts
+    green_count: int = 0
+    yellow_count: int = 0
+    red_count: int = 0
+    
+    # Details for YELLOW and RED only (GREEN devices are fine)
+    devices_needing_attention: list[DeviceAnalysisResponse]
+    
+    # Aggregate business impact
+    total_estimated_daily_cost_usd: float = 0.0
+    truck_rolls_required: int = 0
+    
+    # Recommended priorities
+    priority_actions: list[str] = Field(
+        default_factory=list,
+        description="Top 3-5 actions to take right now, ordered by impact"
+    )
+
+
+class A2ATaskResponse(BaseModel):
+    """
+    A2A protocol task response sent back to Paul Edworth.
+    
+    DO NOT change the structure — Paul parses this exact format.
+    """
+    
+    id: str
+    sessionId: Optional[str] = None
+    status: dict = Field(
+        default_factory=lambda: {"state": "completed"}
+    )
+    artifacts: list[dict] = Field(default_factory=list)
+
+    @classmethod
+    def from_analysis(
+        cls,
+        task_id: str,
+        session_id: str,
+        analysis: DeviceAnalysisResponse
+    ) -> "A2ATaskResponse":
+        """Helper to build a proper A2A response from an analysis result."""
+        return cls(
+            id=task_id,
+            sessionId=session_id,
+            status={"state": "completed"},
+            artifacts=[{
+                "name": "analysis_result",
+                "parts": [
+                    {
+                        "type": "data",
+                        "data": analysis.model_dump()
+                    }
+                ]
+            }]
+        )

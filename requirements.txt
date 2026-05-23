@@ -1,0 +1,26 @@
+# AIOps Invincible WiFi Agent — Project README
+# Enterprise AIOps Team
+# Environment: Python 3.11+ | AWS Strands SDK | FastAPI | Terraform
+
+# ============================================================
+# QUICK REFERENCE FOR AI IDE
+# ============================================================
+# Primary task: Refactor existing agents per 6 stories
+# Main product: Invincible WiFi (140k devices, nationwide)
+# Agent framework: AWS Strands SDK
+# Deployment: ECS Fargate (NOT Lambda — Lambda is being removed)
+# Data: Aurora (SQL) + DynamoDB (NoSQL) + Neptune (Graph) + Kafka (stream)
+# Master orchestrator: Paul Edworth AI agent (already built, not your task)
+# Protocol: A2A (Agent-to-Agent) — need agent_card.json at root
+# ============================================================
+
+strands-agents>=0.1.0
+pydantic>=2.0.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+boto3>=1.34.0
+botocore>=1.34.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0   # for testing FastAPI endpoints
