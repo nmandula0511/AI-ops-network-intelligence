@@ -5,6 +5,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 function App() {
   const [topology, setTopology] = useState({ devices: [], ap_towers: [], summary: { total_devices: 0, active_lte: 0, stuck_lte: 0, truck_rolls: 0 } });
+  // eslint-disable-next-line no-unused-vars
   const [anomalies, setAnomalies] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [deviceAnalysis, setDeviceAnalysis] = useState(null);
@@ -48,6 +49,7 @@ function App() {
     connectWebSocket();
     const interval = setInterval(fetchAnomalies, 10000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTopology = async () => {
