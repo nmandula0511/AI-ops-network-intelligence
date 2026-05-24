@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 function App() {
   const [topology, setTopology] = useState({ devices: [], ap_towers: [], summary: { total_devices: 0, active_lte: 0, stuck_lte: 0, truck_rolls: 0 } });
@@ -71,8 +71,24 @@ function App() {
   };
 
   const connectWebSocket = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//localhost:8080/ws`);
+    let wsUrl;
+    if (process.env.REACT_APP_WS_URL) {
+      wsUrl = process.env.REACT_APP_WS_URL;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      if (API_BASE.startsWith('http')) {
+        try {
+          const urlObj = new URL(API_BASE);
+          const wsProtocol = urlObj.protocol === 'https:' ? 'wss:' : 'ws:';
+          wsUrl = `${wsProtocol}//${urlObj.host}/ws`;
+        } catch (e) {
+          wsUrl = `${protocol}//localhost:8080/ws`;
+        }
+      } else {
+        wsUrl = `${protocol}//localhost:8080/ws`;
+      }
+    }
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => setWsStatus('connected');
