@@ -12,8 +12,6 @@ services:
         sync: false
         description: "Azure OpenAI API Endpoint URL"
       - key: AZURE_OPENAI_API_VERSION
-        sync: false
         value: "2025-01-01-preview"
       - key: AZURE_OPENAI_DEPLOYMENT
-        sync: false
         value: "gpt-4o"
