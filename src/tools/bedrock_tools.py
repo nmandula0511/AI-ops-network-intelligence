@@ -6,7 +6,7 @@ Story 3 — Reusable @tool Decorated Functions for bedrock reasoning calls.
 
 import os
 from strands import tool
-from openai import AzureOpenAI
+import boto3
 
 @tool
 def analyze_with_bedrock(
@@ -22,39 +22,36 @@ def analyze_with_bedrock(
     Returns:
         dict containing AI summary, patterns_detected, and anomaly_probability.
     """
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-
+    model_id = os.getenv("AWS_BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
     prompt = f"Run anomaly analysis on this JSON payload:\n{str(data)}"
-    
-    if api_key and endpoint:
-        try:
-            base_url = endpoint
-            if "/openai/deployments/" in endpoint:
-                base_url = endpoint.split("/openai/deployments/")[0] + "/openai"
-                
-            client = AzureOpenAI(
-                api_key=api_key,
-                azure_endpoint=base_url,
-                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-            )
-            response = client.chat.completions.create(
-                model=deployment,
-                messages=[
-                    {"role": "system", "content": "You are a network reasoning model. Classify logs and flag patterns."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=300
-            )
-            ai_text = response.choices[0].message.content
-            return {
-                "success": True,
-                "analysis": ai_text,
-                "model": "amazon.nova-pro-v1:0"
+
+    try:
+        bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+        )
+        response = bedrock_client.converse(
+            modelId=model_id,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"text": prompt}]
+                }
+            ],
+            system=[{"text": "You are a network reasoning model. Classify logs and flag patterns."}],
+            inferenceConfig={
+                "maxTokens": 300,
+                "temperature": 0.3
             }
-        except Exception as e:
-            print(f"Bedrock/OpenAI tool failed: {e}")
+        )
+        ai_text = response['output']['message']['content'][0]['text']
+        return {
+            "success": True,
+            "analysis": ai_text,
+            "model": model_id
+        }
+    except Exception as e:
+        print(f"Bedrock API call failed: {e}")
 
     # Fallback response
     return {

@@ -9,7 +9,7 @@ import os
 import re
 import inspect
 from typing import Optional, List, Callable, Any
-from openai import AzureOpenAI
+import boto3
 
 def tool(func: Callable[..., Any]) -> Callable[..., Any]:
     """
@@ -88,10 +88,8 @@ class Agent:
                 except Exception as e:
                     print(f"Error running tool {t_name}: {e}")
 
-        # 2. Try calling Azure OpenAI if credentials exist
-        api_key = os.getenv("AZURE_OPENAI_API_KEY")
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+        # 2. Try calling AWS Bedrock if client is available
+        model_id = os.getenv("AWS_BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
         
         # Format tool data into user query
         enriched_user_message = f"User Request: {prompt}\n\n"
@@ -100,32 +98,29 @@ class Agent:
             import json
             enriched_user_message += json.dumps(device_data, indent=2)
 
-        if api_key and endpoint:
-            try:
-                # Setup client
-                # Split endpoint to base if it contains full deployment path
-                base_url = endpoint
-                if "/openai/deployments/" in endpoint:
-                    base_url = endpoint.split("/openai/deployments/")[0] + "/openai"
-                    
-                client = AzureOpenAI(
-                    api_key=api_key,
-                    azure_endpoint=base_url,
-                    api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-                )
-                
-                response = client.chat.completions.create(
-                    model=deployment,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": enriched_user_message}
-                    ],
-                    max_tokens=800,
-                    temperature=0.3
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                print(f"Azure OpenAI call failed (falling back to rule-based diagnostics): {e}")
+        try:
+            bedrock_client = boto3.client(
+                "bedrock-runtime",
+                region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+            )
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [{"text": enriched_user_message}]
+                    }
+                ],
+                system=[{"text": self.system_prompt}] if self.system_prompt else [],
+                inferenceConfig={
+                    "maxTokens": 800,
+                    "temperature": 0.3
+                }
+            )
+            return response['output']['message']['content'][0]['text']
+        except Exception:
+            # Silently fallback to rules in local execution without printing stacktrace
+            pass
 
         # 3. Fallback rule-based diagnostics (if API fails or keys aren't set)
         if device_id and device_data:

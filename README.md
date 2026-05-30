@@ -96,15 +96,15 @@ The repository has been migrated from vanilla, tightly-coupled script prototypes
 ### Prerequisites
 *   Python 3.11+
 *   Node.js (for the React frontend)
-*   Azure OpenAI/AWS Bedrock credentials configured in `.env`
+*   AWS Bedrock credentials configured in `.env`
 
 ### 1. Start the API Backend
 Configure your environment variables in `.env`:
 ```env
-AZURE_OPENAI_API_KEY=your_api_key
-AZURE_OPENAI_ENDPOINT=your_endpoint_url
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-AZURE_OPENAI_DEPLOYMENT=gpt-4
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BEDROCK_MODEL_ID=amazon.nova-pro-v1:0
 ```
 
 Set up python virtual environment and run server:

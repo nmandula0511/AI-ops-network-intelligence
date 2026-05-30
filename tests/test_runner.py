@@ -9,8 +9,8 @@ import sys
 import os
 from pathlib import Path
 
-# Add project root to python path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root to python path (prioritize mock folder over site-packages)
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.models.requests import DeviceAnalysisRequest
 from src.agent.factory import create_invincible_wifi_agent

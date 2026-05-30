@@ -5,13 +5,13 @@ services:
     dockerfilePath: Dockerfile.api
     plan: free
     envVars:
-      - key: AZURE_OPENAI_API_KEY
+      - key: AWS_ACCESS_KEY_ID
         sync: false
-        description: "Azure OpenAI API Key for agent reasoning"
-      - key: AZURE_OPENAI_ENDPOINT
+        description: "AWS Access Key ID for Bedrock reasoning"
+      - key: AWS_SECRET_ACCESS_KEY
         sync: false
-        description: "Azure OpenAI API Endpoint URL"
-      - key: AZURE_OPENAI_API_VERSION
-        value: "2025-01-01-preview"
-      - key: AZURE_OPENAI_DEPLOYMENT
-        value: "gpt-4o"
+        description: "AWS Secret Access Key for Bedrock reasoning"
+      - key: AWS_DEFAULT_REGION
+        value: "us-east-1"
+      - key: AWS_BEDROCK_MODEL_ID
+        value: "amazon.nova-pro-v1:0"
