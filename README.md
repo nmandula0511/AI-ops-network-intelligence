@@ -15,6 +15,7 @@ Designed to replace manual operations and eliminate expensive technician dispatc
 
 The platform is structured as an **Agent-to-Agent (A2A)** hierarchy managed by a master orchestrator (`Paul Edworth`) who matches telemetry alerts to sub-agents via root capability discovery (`agent_card.json`).
 
+### 🔌 Agent Orchestration Topology
 ```mermaid
 graph TD
     UI[NOC React Operations Dashboard] <--> |WebSockets & REST| API[FastAPI Direct REST Server]
@@ -35,6 +36,18 @@ graph TD
         Tools --> NoSQL[(Amazon DynamoDB: Active configs)]
         Tools --> Graph[(Amazon Neptune: Graph topology)]
     end
+```
+
+### 📊 Telemetry Data Flow Ingestion Pipeline
+To process high-frequency telemetry from nationwide network routers in real-time, the platform orchestrates ingestion and agent-based fault remediation via the following pipeline:
+
+```mermaid
+graph TD
+    A[Telemetry Stream: 140k Routers] -->|FastAPI / Ingestion| B(Kafka Buffer)
+    B -->|Log Processing| C{Agent Factory}
+    C -->|Session 1| D[WiFi Agent]
+    C -->|Session 2| E[Modem Agent]
+    D & E -->|Validation| F[Terraform / Local Core]
 ```
 
 ---
