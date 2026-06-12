@@ -6,15 +6,13 @@ Requires no external testing frameworks. Runs out of the box!
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to python path (prioritize mock folder over site-packages)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.models.requests import DeviceAnalysisRequest
-from src.agent.factory import create_invincible_wifi_agent
-from strands import tool
+from src.agent.factory import create_smartedge_diagnostics_agent
 
 def run_tests():
     print("[TEST] STARTING STANDALONE AIOPS VERIFICATION TESTS\n")
@@ -22,7 +20,7 @@ def run_tests():
     # Test 1: Pydantic Validation Checks
     print("-> Test 1: Verifying Pydantic Request validation...")
     try:
-        req = DeviceAnalysisRequest(device_id="INV-WIFI-1234567890", include_history_days=7)
+        req = DeviceAnalysisRequest(device_id="SE-GW-1234567890", include_history_days=7)
         print("   [OK] Valid device ID passed successfully.")
     except Exception as e:
         print(f"   [FAIL] Valid device ID failed unexpectedly: {e}")
@@ -49,8 +47,8 @@ def run_tests():
 
     # Test 3: Factory Pattern User Isolation
     print("\n-> Test 3: Verifying Factory Pattern user isolation...")
-    agent1 = create_invincible_wifi_agent(session_id="user1-session")
-    agent2 = create_invincible_wifi_agent(session_id="user2-session")
+    agent1 = create_smartedge_diagnostics_agent(session_id="user1-session")
+    agent2 = create_smartedge_diagnostics_agent(session_id="user2-session")
     
     if agent1 is agent2:
         print("   [FAIL] Factory returned identical agent instances (context bleed danger)!")

@@ -79,7 +79,7 @@ class AIOpsOrchestrator:
             return (
                 "INCIDENT REPORT\n"
                 "===============\n"
-                "Summary: Invincible WiFi device was stuck on LTE backup after a temporary cable outage.\n"
+                "Summary: SmartEdge Gateway device was stuck on LTE backup after a temporary cable outage.\n"
                 "Root Cause: Outdated firmware 3.1.2 failed to reload fiber routing tables.\n"
                 "Impact: High data transit charges from carrier.\n"
                 "Action Taken: Upgraded router firmware to 3.2.1 and cleared the interface cache.\n"

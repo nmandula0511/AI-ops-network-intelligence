@@ -1,21 +1,15 @@
 # infra/main.tf
 # ==============
-# Story 6 — Terraform for Deployment
+# Story 6 — Terraform for Deployment & Gateway Provisioning
 #
-# Deploys the Invincible WiFi Agent as an ECS Fargate service.
-# Replaces the old Lambda + API Gateway deployment.
+# Deploys the SmartEdge Gateway Agent as an ECS Fargate service and provisions
+# the AWS Bedrock AgentCore MCP Gateway infrastructure.
 #
 # Usage:
 #   terraform init
 #   terraform plan -var-file=environments/dev.tfvars
 #   terraform apply -var-file=environments/dev.tfvars
 #
-# AI IDE NOTE:
-#   - No Lambda resource here — Lambda is intentionally removed (Story 5)
-#   - No API Gateway resource — also removed
-#   - Agent runs as ECS Fargate container on port 8080
-#   - ECS calls /health endpoint every 30 seconds
-#   - Aurora/DynamoDB/Neptune are pre-existing — referenced via data sources
 
 terraform {
   required_version = ">= 1.5.0"
@@ -27,8 +21,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "charter-aiops-terraform-state"
-    key    = "invincible-wifi-agent/terraform.tfstate"
+    bucket = "optima-aiops-terraform-state"
+    key    = "smartedge-gateway-agent/terraform.tfstate"
     region = "us-east-1"
   }
 }
@@ -66,24 +60,24 @@ variable "container_image_tag" {
 # Data Sources — Reference Existing Infrastructure
 # ─────────────────────────────────────────────────────────
 
-data "aws_vpc" "charter_aiops" {
-  tags = { Name = "charter-aiops-vpc-${lower(var.environment)}" }
+data "aws_vpc" "optima_aiops" {
+  tags = { Name = "optima-aiops-vpc-${lower(var.environment)}" }
 }
 
 data "aws_subnets" "private" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.charter_aiops.id]
+    values = [data.aws_vpc.optima_aiops.id]
   }
   tags = { Tier = "private" }
 }
 
-data "aws_rds_cluster" "aurora" {
-  cluster_identifier = "aiops-aurora-${lower(var.environment)}"
+data "aws_rds_cluster" "telemetry_db" {
+  cluster_identifier = "aiops-telemetry-${lower(var.environment)}"
 }
 
 data "aws_ecr_repository" "agent" {
-  name = "aiops/invincible-wifi-agent"
+  name = "aiops/smartedge-gateway-agent"
 }
 
 # ─────────────────────────────────────────────────────────
@@ -91,7 +85,7 @@ data "aws_ecr_repository" "agent" {
 # ─────────────────────────────────────────────────────────
 
 resource "aws_ecs_cluster" "aiops" {
-  name = "charter-aiops-${lower(var.environment)}"
+  name = "optima-aiops-${lower(var.environment)}"
 
   setting {
     name  = "containerInsights"
@@ -101,11 +95,10 @@ resource "aws_ecs_cluster" "aiops" {
 
 # ─────────────────────────────────────────────────────────
 # ECS Task Definition
-# (replaces Lambda function definition)
 # ─────────────────────────────────────────────────────────
 
-resource "aws_ecs_task_definition" "invincible_wifi_agent" {
-  family                   = "invincible-wifi-agent-${lower(var.environment)}"
+resource "aws_ecs_task_definition" "smartedge_gateway_agent" {
+  family                   = "smartedge-gateway-agent-${lower(var.environment)}"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "1024"   # 1 vCPU
@@ -114,7 +107,7 @@ resource "aws_ecs_task_definition" "invincible_wifi_agent" {
   task_role_arn            = aws_iam_role.ecs_task.arn
 
   container_definitions = jsonencode([{
-    name  = "invincible-wifi-agent"
+    name  = "smartedge-gateway-agent"
     image = "${data.aws_ecr_repository.agent.repository_url}:${var.container_image_tag}"
 
     portMappings = [{
@@ -128,9 +121,9 @@ resource "aws_ecs_task_definition" "invincible_wifi_agent" {
       { name = "LOG_LEVEL",  value = var.environment == "PROD" ? "INFO" : "DEBUG" }
     ]
 
-    # Health check — ECS calls this to know if container is healthy
+    # Health check — ECS calls this to check if container is active
     healthCheck = {
-      command     = ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      command     = ["CMD-SHELL", "curl -f http://localhost:8080/ping || exit 1"]
       interval    = 30
       timeout     = 5
       retries     = 3
@@ -150,16 +143,14 @@ resource "aws_ecs_task_definition" "invincible_wifi_agent" {
 
 # ─────────────────────────────────────────────────────────
 # ECS Service
-# (replaces API Gateway + Lambda trigger)
 # ─────────────────────────────────────────────────────────
 
-resource "aws_ecs_service" "invincible_wifi_agent" {
-  name            = "invincible-wifi-agent-${lower(var.environment)}"
+resource "aws_ecs_service" "smartedge_gateway_agent" {
+  name            = "smartedge-gateway-agent-${lower(var.environment)}"
   cluster         = aws_ecs_cluster.aiops.id
-  task_definition = aws_ecs_task_definition.invincible_wifi_agent.arn
+  task_definition = aws_ecs_task_definition.smartedge_gateway_agent.arn
   launch_type     = "FARGATE"
 
-  # PROD gets 3 replicas for high availability; DEV/UAT get 1
   desired_count = var.environment == "PROD" ? 3 : 1
 
   network_configuration {
@@ -170,7 +161,7 @@ resource "aws_ecs_service" "invincible_wifi_agent" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.agent.arn
-    container_name   = "invincible-wifi-agent"
+    container_name   = "smartedge-gateway-agent"
     container_port   = 8080
   }
 
@@ -182,7 +173,7 @@ resource "aws_ecs_service" "invincible_wifi_agent" {
 # ─────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "agent" {
-  name              = "/ecs/invincible-wifi-agent-${lower(var.environment)}"
+  name              = "/ecs/smartedge-gateway-agent-${lower(var.environment)}"
   retention_in_days = var.environment == "PROD" ? 90 : 14
 }
 
@@ -191,7 +182,7 @@ resource "aws_cloudwatch_log_group" "agent" {
 # ─────────────────────────────────────────────────────────
 
 resource "aws_iam_role" "ecs_task" {
-  name = "invincible-wifi-agent-task-${lower(var.environment)}"
+  name = "smartedge-gateway-agent-task-${lower(var.environment)}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -224,7 +215,7 @@ resource "aws_iam_role_policy" "agent_permissions" {
           "rds-data:ExecuteStatement",
           "rds-data:BatchExecuteStatement"
         ]
-        Resource = data.aws_rds_cluster.aurora.arn
+        Resource = data.aws_rds_cluster.telemetry_db.arn
       },
       {
         Effect   = "Allow"
@@ -236,7 +227,7 @@ resource "aws_iam_role_policy" "agent_permissions" {
 }
 
 resource "aws_iam_role" "ecs_execution" {
-  name = "invincible-wifi-agent-execution-${lower(var.environment)}"
+  name = "smartedge-gateway-agent-execution-${lower(var.environment)}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -251,4 +242,90 @@ resource "aws_iam_role" "ecs_execution" {
 resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
   role       = aws_iam_role.ecs_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# (Add placeholder security groups & load balancer listeners referenced in service to make Terraform valid)
+resource "aws_security_group" "agent" {
+  name        = "smartedge-agent-sg"
+  vpc_id      = data.aws_vpc.optima_aiops.id
+}
+resource "aws_lb_target_group" "agent" {
+  name        = "smartedge-agent-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.optima_aiops.id
+  target_type = "ip"
+}
+resource "aws_lb_listener" "agent_https" {
+  load_balancer_arn = "arn:aws:elasticloadbalancing:${var.aws_region}:123456789012:loadbalancer/app/dummy-lb/12345"
+  port              = 443
+  protocol          = "HTTPS"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.agent.arn
+  }
+}
+
+
+# ─────────────────────────────────────────────────────────
+# aws_bedrockagentcore_gateway Provisioning (Repository 3)
+# ─────────────────────────────────────────────────────────
+
+resource "aws_bedrockagentcore_gateway" "mcp" {
+  name             = "central-mcp-gateway-${lower(var.environment)}"
+  protocol         = "MCP"
+  authorization    = "AWS_IAM"
+  description      = "Secure Model Context Protocol gateway interface for AIOps reasoning models."
+
+  tags = {
+    Environment = var.environment
+    Service     = "AIOps Gateway"
+  }
+}
+
+# API Credentials Providers in Secrets Manager
+resource "aws_secretsmanager_secret" "target_keys" {
+  name        = "aiops/gateway/target-credentials-${lower(var.environment)}"
+  description = "Secret API keys used to authorize gateway calls to target services."
+}
+
+resource "aws_secretsmanager_secret_version" "target_keys_value" {
+  secret_id     = aws_secretsmanager_secret.target_keys.id
+  secret_string = jsonencode({
+    netsense_core_api_token = "net-token-secure-123",
+    docs_rag_token          = "rag-token-secure-456",
+    topology_graph_token    = "topo-token-secure-789"
+  })
+}
+
+# Gateway Targets configurations (3 primary targets mapping OpenAPI specs)
+resource "aws_bedrockagentcore_gateway_target" "netsense_core_api" {
+  gateway_id = aws_bedrockagentcore_gateway.mcp.id
+  name       = "netsense-core-api-target"
+  endpoint   = "https://api.netsense.optima.internal/device-feed"
+  
+  # Inject target OpenAPI spec template config
+  openapi_spec = templatefile("${path.module}/openapi/netsense_core_api.json.tftpl", {
+    base_url = "https://api.netsense.optima.internal/device-feed"
+  })
+}
+
+resource "aws_bedrockagentcore_gateway_target" "docs_rag" {
+  gateway_id = aws_bedrockagentcore_gateway.mcp.id
+  name       = "docs-rag-target"
+  endpoint   = "https://rag.kb.optima.internal"
+  
+  openapi_spec = templatefile("${path.module}/openapi/docs_rag.json.tftpl", {
+    base_url = "https://rag.kb.optima.internal"
+  })
+}
+
+resource "aws_bedrockagentcore_gateway_target" "topology_graph" {
+  gateway_id = aws_bedrockagentcore_gateway.mcp.id
+  name       = "topology-graph-target"
+  endpoint   = "https://topology.graph.optima.internal"
+  
+  openapi_spec = templatefile("${path.module}/openapi/topology_graph.json.tftpl", {
+    base_url = "https://topology.graph.optima.internal"
+  })
 }

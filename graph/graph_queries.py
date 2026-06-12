@@ -152,10 +152,10 @@ class NetworkGraphQueries:
                 {"id": "switch-dist-02", "name": "Dist Switch 02", "type": "switch", "location": "CO"}
             ],
             "indirectly_affected": [
-                {"id": "INV-WIFI-1234567801", "name": "Invincible WiFi 01", "type": "router"},
-                {"id": "INV-WIFI-1234567802", "name": "Invincible WiFi 02", "type": "router"},
-                {"id": "INV-WIFI-1234567803", "name": "Invincible WiFi 03", "type": "router"},
-                {"id": "INV-WIFI-1234567804", "name": "Invincible WiFi 04", "type": "router"}
+                {"id": "SE-GW-1234567801", "name": "SmartEdge Gateway 01", "type": "router"},
+                {"id": "SE-GW-1234567802", "name": "SmartEdge Gateway 02", "type": "router"},
+                {"id": "SE-GW-1234567803", "name": "SmartEdge Gateway 03", "type": "router"},
+                {"id": "SE-GW-1234567804", "name": "SmartEdge Gateway 04", "type": "router"}
             ]
         }
         print(f"   [MOCK] Direct impact  : 2 devices")

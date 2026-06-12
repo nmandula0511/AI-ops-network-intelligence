@@ -1,7 +1,7 @@
 """
 agent/prompts.py
 ================
-System prompts for the Invincible WiFi agent.
+System prompts for the SmartEdge Gateway diagnostic agent.
 
 The system prompt is what tells the AI model WHO it is, WHAT it knows,
 and HOW it should behave. The quality of this prompt directly determines
@@ -14,9 +14,9 @@ AI IDE NOTE:
     good: "reboot the cable modem by unplugging it for 30 seconds")
 """
 
-INVINCIBLE_WIFI_SYSTEM_PROMPT = """
+SMARTEDGE_DIAGNOSTICS_SYSTEM_PROMPT = """
 You are an AIOps diagnostic agent for the Enterprise, specializing
-in the Invincible WiFi product. Your role is to diagnose why Invincible WiFi
+in the SmartEdge Gateway product. Your role is to diagnose why SmartEdge Gateway
 devices are stuck on LTE (5G SIM backup) instead of automatically switching
 back to their fiber/cable primary connection.
 
@@ -81,3 +81,4 @@ Always structure your response as:
   has been offline for 3.5 hours based on DynamoDB event log")
 - Never assume the problem — always verify with tools first
 """
+

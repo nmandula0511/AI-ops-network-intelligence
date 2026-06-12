@@ -18,7 +18,7 @@ def generate_customer_recommendation(
     Prioritizes self-service (e.g. modem reboot, cable check) to prevent expensive technician truck rolls.
 
     Args:
-        device_id: Invincible WiFi device ID (INV-WIFI-XXXXXXXXXX)
+        device_id: SmartEdge Gateway device ID (SE-GW-XXXXXXXXXX)
         root_cause: Diagnosed failure reason (e.g. 'Cable modem offline', 'Firmware bug', 'Cache desync')
         lte_duration_minutes: Minutes the device has been stuck on LTE
 
@@ -38,7 +38,7 @@ def generate_customer_recommendation(
             "Wait 2-3 minutes for the lights to stabilize and check if the internet switches back to fiber."
         ]
     elif "firmware" in root_cause.lower():
-        summary = "An update is required to resolve a connection routing bug on your Invincible WiFi device."
+        summary = "An update is required to resolve a connection routing bug on your SmartEdge Gateway."
         steps = [
             "We have queued a firmware update (v3.2.1) to be pushed to your router.",
             "This update will be applied automatically within 10 minutes.",
@@ -47,14 +47,14 @@ def generate_customer_recommendation(
     elif "cache" in root_cause.lower() or "reboot" in root_cause.lower():
         summary = "Your router needs a connection refresh to clear its routing cache."
         steps = [
-            "Locate the reset button on the back of your Invincible WiFi router.",
+            "Locate the reset button on the back of your SmartEdge Gateway router.",
             "Using a paperclip or pen, press and hold the reset button for 3 seconds (do not hold longer as it might factory reset).",
             "Release the button and wait 1 minute for the router to refresh its connection status."
         ]
     else:
         summary = "We detected a transient connection state. A soft refresh is recommended."
         steps = [
-            "Reboot your Invincible WiFi router by unplugging its power cord for 10 seconds.",
+            "Reboot your SmartEdge Gateway router by unplugging its power cord for 10 seconds.",
             "Plug it back in and allow it to initialize."
         ]
 
@@ -79,7 +79,7 @@ def flag_for_truck_roll(
     Truck rolls cost the company hundreds of dollars.
 
     Args:
-        device_id: Invincible WiFi device ID (INV-WIFI-XXXXXXXXXX)
+        device_id: SmartEdge Gateway device ID (SE-GW-XXXXXXXXXX)
         reason: Explanation of why self-service failed and why a truck roll is necessary
         priority: Escalation priority: LOW / MEDIUM / HIGH / CRITICAL. Default: MEDIUM.
 
@@ -116,7 +116,7 @@ def create_outreach_ticket(
     Use this for YELLOW severity alerts where remote config checks show healthy links but device stays on LTE.
 
     Args:
-        device_id: Invincible WiFi device ID (INV-WIFI-XXXXXXXXXX)
+        device_id: SmartEdge Gateway device ID (SE-GW-XXXXXXXXXX)
         channel: Notification delivery channel: EMAIL / SMS / PHONE. Default: EMAIL.
 
     Returns:
@@ -128,9 +128,10 @@ def create_outreach_ticket(
         "outreach_ticket_id": ticket_id,
         "status": "OPEN",
         "channel": channel.upper(),
-        "outreach_message": f"Dear Customer, your Invincible WiFi is running on backup LTE. Please check your cable modem power connections."
+        "outreach_message": f"Dear Customer, your SmartEdge Gateway is running on backup LTE. Please check your cable modem power connections."
     }
 
 def lte_duration_hash(s: str) -> int:
     import hashlib
     return int(hashlib.md5(s.encode()).hexdigest(), 16) % 10000
+

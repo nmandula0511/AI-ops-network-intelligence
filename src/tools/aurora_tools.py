@@ -52,7 +52,7 @@ def query_device_event_history(
     and historical durations.
 
     Args:
-        device_id: Invincible WiFi device ID (INV-WIFI-XXXXXXXXXX)
+        device_id: SmartEdge Gateway device ID (SE-GW-XXXXXXXXXX)
         days: Retrieve history for last N days. Default 7.
 
     Returns:
@@ -75,7 +75,7 @@ def get_devices_by_region(
     region: str
 ) -> list:
     """
-    Queries Aurora database for a list of Invincible WiFi devices active in a specific region.
+    Queries Aurora database for a list of SmartEdge Gateway devices active in a specific region.
     Regions supported: NE, SE, MW, SW, W.
 
     Args:
@@ -99,9 +99,9 @@ def get_devices_by_region(
     # Mock fallback
     return [
         {
-            "device_id": f"INV-WIFI-000000000{i}",
+            "device_id": f"SE-GW-000000000{i}",
             "mac_address": f"00:11:22:33:44:0{i}",
-            "customer_account_id": f"CHR-1000000{i}",
+            "customer_account_id": f"OPT-1000000{i}",
             "event_type": "WIFI_TO_LTE" if i % 2 == 0 else "LTE_TO_WIFI",
             "duration_on_lte_minutes": 120 if i % 2 == 0 else 0,
             "location": {"zip_code": "80111", "state": "CO", "region": region.upper()},
@@ -111,3 +111,4 @@ def get_devices_by_region(
         }
         for i in range(1, 5)
     ]
+

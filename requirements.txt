@@ -1,4 +1,4 @@
-# AIOps Invincible WiFi Agent — Project README
+# AIOps SmartEdge Gateway Agent — Project README
 # Enterprise AIOps Team
 # Environment: Python 3.11+ | AWS Strands SDK | FastAPI | Terraform
 
@@ -6,11 +6,11 @@
 # QUICK REFERENCE FOR AI IDE
 # ============================================================
 # Primary task: Refactor existing agents per 6 stories
-# Main product: Invincible WiFi (140k devices, nationwide)
+# Main product: SmartEdge Gateway (140k devices, nationwide)
 # Agent framework: AWS Strands SDK
 # Deployment: ECS Fargate (NOT Lambda — Lambda is being removed)
 # Data: Aurora (SQL) + DynamoDB (NoSQL) + Neptune (Graph) + Kafka (stream)
-# Master orchestrator: Paul Edworth AI agent (already built, not your task)
+# Master orchestrator: NetOrchestrator AI agent (already built, not your task)
 # Protocol: A2A (Agent-to-Agent) — need agent_card.json at root
 # ============================================================
 

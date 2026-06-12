@@ -4,15 +4,66 @@ tools/device_tools.py
 Story 3 — Reusable @tool Decorated Functions
 
 These @tool functions can be called by:
-  - The Invincible WiFi agent
-  - Paul Edworth (master orchestrator) via MCP server
+  - The SmartEdge Diagnostics Agent
+  - NetOrchestrator (master orchestrator) via MCP server
   - Any other agent that needs device data
-  - Future agents not yet built
 """
 
 from strands import tool
 from typing import Optional
 from datetime import date, datetime
+
+# Divergence Engine Hooks Store
+_MATHEMATICAL_ENGINE_HOOKS_STORE = {}
+
+
+def math_engine_capture_hook(device_id: str, result: dict):
+    """Custom agent hook that saves/captures the output of the mathematical rules engine."""
+    _MATHEMATICAL_ENGINE_HOOKS_STORE[device_id] = result
+    print(f"⚓ [Capture Hook] Saved math rules output for {device_id}: {result}")
+
+
+@tool
+def calculate_mathematical_rules_score(
+    device_id: str,
+    lte_duration_minutes: int,
+    cable_modem_online: bool,
+    firmware_version: str
+) -> dict:
+    """
+    Executes hard, rule-based mathematical scoring equations on device telemetry parameters.
+    Returns the rule-based diagnosis confidence score.
+
+    Args:
+        device_id: SmartEdge Gateway device ID.
+        lte_duration_minutes: Minutes device has been on LTE backup.
+        cable_modem_online: True if the primary link modem is online.
+        firmware_version: Router firmware version.
+
+    Returns:
+        dict containing math_rules_score and rationale.
+    """
+    score = 80.0
+    reason = "Standard baseline telemetry confidence score."
+    
+    if lte_duration_minutes < 60 and cable_modem_online:
+        score = 100.0
+        reason = "Device within normal green threshold backup window."
+    elif not cable_modem_online:
+        score = 95.0
+        reason = "Primary cable connection link is down (coaxial/fiber plant issue)."
+    elif firmware_version < "3.2.0":
+        score = 90.0
+        reason = "Buggy firmware driver (< 3.2.0) causing switchback logic block."
+        
+    res = {
+        "device_id": device_id,
+        "math_rules_score": score,
+        "rationale": reason
+    }
+    # Execute the capture hook
+    math_engine_capture_hook(device_id, res)
+    return res
 
 
 @tool
@@ -21,14 +72,14 @@ def get_device_lte_duration(
     reference_date: Optional[str] = None
 ) -> dict:
     """
-    Retrieves how long a specific Invincible WiFi device has been continuously
+    Retrieves how long a specific SmartEdge Gateway device has been continuously
     on LTE (5G SIM backup) instead of its primary fiber connection.
 
     Use this as the FIRST tool to call when diagnosing a stuck-on-LTE device.
     Returns severity level: GREEN (< 60 min), YELLOW (60-90 min), RED (> 90 min).
 
     Args:
-        device_id: Invincible WiFi device ID. Format: INV-WIFI-XXXXXXXXXX
+        device_id: SmartEdge Gateway device ID. Format: SE-GW-XXXXXXXXXX
         reference_date: ISO date YYYY-MM-DD to analyze. Defaults to today UTC.
 
     Returns:
@@ -82,7 +133,7 @@ def get_device_lte_duration(
 @tool
 def get_cable_modem_status(device_id: str) -> dict:
     """
-    Checks the status of the cable modem associated with an Invincible WiFi device.
+    Checks the status of the cable modem associated with a SmartEdge Gateway device.
 
     Cable modem offline is the most common reason a device is stuck on LTE.
     If the modem is offline, the device cannot switch back to fiber even if it wants to.
@@ -90,7 +141,7 @@ def get_cable_modem_status(device_id: str) -> dict:
     Call this after get_device_lte_duration if severity is YELLOW or RED.
 
     Args:
-        device_id: Invincible WiFi device ID. Format: INV-WIFI-XXXXXXXXXX
+        device_id: SmartEdge Gateway device ID. Format: SE-GW-XXXXXXXXXX
 
     Returns:
         dict with keys:
@@ -113,7 +164,7 @@ def get_cable_modem_status(device_id: str) -> dict:
             "modem_online": True,
             "modem_last_seen_online": datetime.utcnow().isoformat() + "Z",
             "modem_offline_duration_minutes": 0,
-            "modem_model": "Charter DOCSIS 3.1 Advanced Modem",
+            "modem_model": "Optima DOCSIS 3.1 Advanced Modem",
             "likely_cause": None
         }
 
@@ -126,7 +177,7 @@ def get_cable_modem_status(device_id: str) -> dict:
         "modem_online": modem_online,
         "modem_last_seen_online": d["timestamp"] if modem_online else "2 hours ago",
         "modem_offline_duration_minutes": offline_duration,
-        "modem_model": "Charter DOCSIS 3.1 Advanced Modem",
+        "modem_model": "Optima DOCSIS 3.1 Advanced Modem",
         "likely_cause": likely_cause
     }
 
@@ -134,7 +185,7 @@ def get_cable_modem_status(device_id: str) -> dict:
 @tool
 def check_firmware_version(device_id: str) -> dict:
     """
-    Returns the firmware version of an Invincible WiFi device and whether
+    Returns the firmware version of a SmartEdge Gateway device and whether
     an update is available or required.
 
     Outdated firmware (especially versions 3.1.x) is a known cause of
@@ -142,7 +193,7 @@ def check_firmware_version(device_id: str) -> dict:
     The Enterprise has documented this as a known issue in firmware < 3.2.0.
 
     Args:
-        device_id: Invincible WiFi device ID. Format: INV-WIFI-XXXXXXXXXX
+        device_id: SmartEdge Gateway device ID. Format: SE-GW-XXXXXXXXXX
 
     Returns:
         dict with keys:

@@ -13,7 +13,7 @@ Designed to replace manual operations and eliminate expensive technician dispatc
 
 ## 🏗️ System Architecture
 
-The platform is structured as an **Agent-to-Agent (A2A)** hierarchy managed by a master orchestrator (`Paul Edworth`) who matches telemetry alerts to sub-agents via root capability discovery (`agent_card.json`).
+The platform is structured as an **Agent-to-Agent (A2A)** hierarchy managed by a master orchestrator (`NetOrchestrator`) who matches telemetry alerts to sub-agents via root capability discovery (`agent_card.json`).
 
 ### 🔌 Agent Orchestration Topology
 ```mermaid
@@ -22,8 +22,8 @@ graph TD
     API <--> |Session Isolation Factory| AgFactory[Strands Agent Factory]
     
     subgraph A2A Orchestrator Engine
-        Orch[Paul Edworth Master Agent]
-        Orch --> |A2A Dispatch| WiFi[Invincible WiFi Agent]
+        Orch[NetOrchestrator Master Agent]
+        Orch --> |A2A Dispatch| WiFi[SmartEdge Diagnostics Agent]
         Orch --> |A2A Dispatch| Modem[Cable Modem Agent]
         Orch --> |A2A Dispatch| Offload[Mobile Offload Agents x3]
     end

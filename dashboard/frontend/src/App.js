@@ -26,7 +26,7 @@ function App() {
 
   // Chat console
   const [chatMessages, setChatMessages] = useState([
-    { role: 'assistant', text: '🤖 [Paul Edworth] Master NOC Agent online. I can route tasks to the Invincible WiFi Agent via A2A.' }
+    { role: 'assistant', text: '🤖 [NetOrchestrator] Master NOC Agent online. I can route tasks to the SmartEdge Diagnostics Agent via A2A.' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [wsStatus, setWsStatus] = useState('connecting');
@@ -54,7 +54,7 @@ function App() {
 
   const fetchTopology = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/topology`);
+      const res = await fetch(`${API_BASE}/device-feed/topology`);
       const data = await res.json();
       setTopology(data);
     } catch (e) {
@@ -64,7 +64,7 @@ function App() {
 
   const fetchAnomalies = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/anomalies`);
+      const res = await fetch(`${API_BASE}/device-feed/anomalies`);
       const data = await res.json();
       setAnomalies(data.stuck_devices || []);
     } catch (e) {
@@ -109,12 +109,12 @@ function App() {
   };
 
   const simulateOutage = async () => {
-    await fetch(`${API_BASE}/api/simulate/outage`, { method: 'POST' });
+    await fetch(`${API_BASE}/device-feed/simulate/outage`, { method: 'POST' });
     setTimeout(fetchTopology, 500);
   };
 
   const clearOutages = async () => {
-    await fetch(`${API_BASE}/api/simulate/clear`, { method: 'POST' });
+    await fetch(`${API_BASE}/device-feed/simulate/clear`, { method: 'POST' });
     setSelectedDevice(null);
     setDeviceAnalysis(null);
     setOptimizationSuccess(false);
@@ -125,7 +125,7 @@ function App() {
     setIsOptimizingTowers(true);
     setOptimizationSuccess(false);
     try {
-      const res = await fetch(`${API_BASE}/api/simulate/ap-optimize`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/device-feed/simulate/ap-optimize`, { method: 'POST' });
       const data = await res.json();
       if (data.status === 'success') {
         setTimeout(() => {
@@ -152,7 +152,7 @@ function App() {
     }, 700);
 
     try {
-      const res = await fetch(`${API_BASE}/analyze`, {
+      const res = await fetch(`${API_BASE}/device-feed/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_id: deviceId })
@@ -166,11 +166,11 @@ function App() {
         
         setChatMessages(prev => [...prev, {
           role: 'assistant',
-          text: `🔍 [Paul Edworth] Task delegated to sub-agent.
+          text: `🔍 [NetOrchestrator] Task delegated to sub-agent.
 Session ID: **${data.session_id}**
 Diagnosis for **${deviceId}**:
 • Severity: **${data.analysis.severity}** (${data.analysis.lte_duration_minutes} mins on LTE)
-• Root Cause: ${data.analysis.root_cause} (Confidence: ${Math.round(data.analysis.confidence_score * 100)}%)
+• Root Cause: ${data.analysis.root_cause} (Confidence: ${Math.round(data.analysis.confidence_score)}%)
 • Action: ${data.analysis.recommended_action}
 • Requires Dispatch: **${data.analysis.requires_truck_roll ? 'YES 🔴' : 'NO ✅'}**`
         }]);
@@ -187,7 +187,7 @@ Diagnosis for **${deviceId}**:
   const triggerRemediation = async (deviceId) => {
     setIsRemediating(true);
     try {
-      await fetch(`${API_BASE}/api/remediate/${deviceId}`, { method: 'POST' });
+      await fetch(`${API_BASE}/device-feed/remediate/${deviceId}`, { method: 'POST' });
       setChatMessages(prev => [...prev, {
         role: 'assistant',
         text: `🔧 [Action Tool] Remote Switchback executed for ${deviceId}. Connection restored to primary Fiber/Cable. Leak closed!`
@@ -210,7 +210,7 @@ Diagnosis for **${deviceId}**:
     setChatMessages(prev => [...prev, { role: 'user', text: question }]);
 
     try {
-      const res = await fetch(`${API_BASE}/api/agent/chat`, {
+      const res = await fetch(`${API_BASE}/device-feed/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: question })
@@ -234,7 +234,7 @@ Diagnosis for **${deviceId}**:
     ];
 
     try {
-      const res = await fetch(`${API_BASE}/api/dev/run-tests`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/device-feed/dev/run-tests`, { method: 'POST' });
       const data = await res.json();
       if (data.logs) {
         const liveLogs = data.logs.split('\n').filter(line => line.trim() !== '');
@@ -557,10 +557,10 @@ Diagnosis for **${deviceId}**:
       NOC_DEVICES: {
         title: 'NOC Devices & AP Towers',
         role: 'Physical routers and Charlotte NC access points emitting telemetry changes (fiber outages, 3GPP transitions).',
-        tech: 'invincible wifi 6e / dual link',
+        tech: 'smartedge gateway 6e / dual link',
         payloadLabel: 'Live Telemetry State Payload',
         payload: {
-          device_id: "INV-WIFI-1234567806",
+          device_id: "SE-GW-1234567806",
           mac_address: "AA:BB:CC:DD:EE:06",
           event_type: "WIFI_TO_LTE",
           duration_on_lte_minutes: 65,
@@ -578,7 +578,7 @@ Diagnosis for **${deviceId}**:
           topic: "network-telemetry",
           partition: 2,
           offset: 120554,
-          key: "INV-WIFI-1234567806",
+          key: "SE-GW-1234567806",
           timestamp: new Date().toISOString(),
           value: {
             mac: "AA:BB:CC:DD:EE:06",
@@ -593,7 +593,7 @@ Diagnosis for **${deviceId}**:
         role: 'Stores full timelines of device connection hops. The agent queries this database to identify stuck recurrence patterns.',
         tech: 'aurora sql / postgres engine',
         payloadLabel: 'SQL Event History Query',
-        payloadText: `SELECT \n  event_id, \n  timestamp, \n  event_type, \n  duration_on_lte_minutes, \n  cable_modem_status \nFROM device_events \nWHERE device_id = 'INV-WIFI-1234567806' \nORDER BY timestamp DESC \nLIMIT 5;`
+        payloadText: `SELECT \n  event_id, \n  timestamp, \n  event_type, \n  duration_on_lte_minutes, \n  cable_modem_status \nFROM device_events \nWHERE device_id = 'SE-GW-1234567806' \nORDER BY timestamp DESC \nLIMIT 5;`
       },
       DATABASE_NOSQL: {
         title: 'Amazon DynamoDB State Store',
@@ -602,7 +602,7 @@ Diagnosis for **${deviceId}**:
         payloadLabel: 'DynamoDB Item Map Description',
         payload: {
           TableName: "DeviceActiveState",
-          Key: { DeviceId: { S: "INV-WIFI-1234567806" } },
+          Key: { DeviceId: { S: "SE-GW-1234567806" } },
           Item: {
             Heartbeat: { S: new Date().toISOString() },
             CableModemStatus: { S: "ONLINE" },
@@ -616,22 +616,22 @@ Diagnosis for **${deviceId}**:
         role: 'Orchestrates topological relations of network servers, towers and routers. Performs blast-radius queries.',
         tech: 'neptune graph / gremlin engine',
         payloadLabel: 'Gremlin Topology Blast Radius Query',
-        payloadText: `g.V('INV-WIFI-1234567806')\n  .out('connected_to')\n  .out('depends_on')\n  .path()\n  .by('name')\n  .by('ip_address')`
+        payloadText: `g.V('SE-GW-1234567806')\n  .out('connected_to')\n  .out('depends_on')\n  .path()\n  .by('name')\n  .by('ip_address')`
       },
       AI_AGENT: {
-        title: 'Paul Edworth & Wifi Sub-Agent',
+        title: 'NetOrchestrator & Wifi Sub-Agent',
         role: 'The core A2A orchestrator receives the alerts, reads cards to launch WiFi agents, and manages isolated memories.',
         tech: 'strands framework sdk',
         payloadLabel: 'A2A Task Dispatch Schema',
         payload: {
-          sender: "Paul Edworth Orchestrator",
-          recipient: "Invincible WiFi Agent",
+          sender: "NetOrchestrator Orchestrator",
+          recipient: "SmartEdge Diagnostics Agent",
           session_id: "user-session-81765",
           task: {
             task_id: "task-diag-inv-06",
             skill: "analyze_device_lte_duration",
             inputs: {
-              device_id: "INV-WIFI-1234567806",
+              device_id: "SE-GW-1234567806",
               include_history_days: 7
             }
           }
@@ -641,7 +641,7 @@ Diagnosis for **${deviceId}**:
         title: 'AWS Bedrock LLM Reasoning Engine',
         role: 'Leverages foundation LLMs (Nova Pro) to run rule evaluations, isolate bugs, and choose remote remedial paths.',
         tech: 'aws bedrock / nova-pro-v1',
-        payloadLabel: 'Invincible WiFi Diagnostic Rules Segment',
+        payloadLabel: 'SmartEdge Gateway Diagnostic Rules Segment',
         payloadText: `RULE: if duration_on_lte_minutes >= 60 AND cable_modem_status == 'ONLINE' AND firmware == '3.1.2':\n  IDENTIFY: Stuck LTE Backup Bug (Firmware bug)\n  CONFIDENCE: 90%\n  ACTION: REMOTE_SWITCHBACK\n  REQUIRES_TRUCK_ROLL: FALSE`
       }
     };
@@ -796,7 +796,7 @@ Diagnosis for **${deviceId}**:
       {/* HEADER */}
       <header className="header">
         <div className="header-left">
-          <span className="logo">⚡ Charter AIOps Network Operations Console</span>
+          <span className="logo">⚡ Optima AIOps Network Operations Console</span>
           <span className={`ws-status ${wsStatus}`}>
             {wsStatus === 'connected' ? '🟢 Kafka Stream: Online' : '🔴 Stream Offline'}
           </span>
@@ -818,7 +818,7 @@ Diagnosis for **${deviceId}**:
           </div>
           <div className="header-stat-box cost">
             <span className="header-stat-val">${totalBillingWaste.toFixed(2)}</span>
-            <span className="header-stat-lbl">Verizon Data Waste</span>
+            <span className="header-stat-lbl">CellLink Data Waste</span>
           </div>
           <div className="header-stat-box rate">
             <span className="header-stat-val">${hourlyLeakRate.toFixed(2)}/hr</span>
@@ -864,7 +864,7 @@ Diagnosis for **${deviceId}**:
             {/* Left Operations Grid */}
             <div className="left-panel">
               <div className="panel-header">
-                <h2>Invincible WiFi Nationwide Router Map</h2>
+                <h2>SmartEdge Gateway Nationwide Router Map</h2>
                 <div className="controls">
                   <button onClick={simulateOutage} className="btn btn-danger">
                     💥 Inject Fiber Outage
@@ -961,8 +961,8 @@ Diagnosis for **${deviceId}**:
                   
                   {/* Premium visual showcase card */}
                   <div className="product-showcase-card">
-                    <img src="/router.png" alt="Invincible WiFi Router" className="router-product-img" />
-                    <span className="product-label">CHR-WIFI-6E (FIBER + 5G SIM DUAL LINK ACTIVE)</span>
+                    <img src="/router.png" alt="SmartEdge Gateway Router" className="router-product-img" />
+                    <span className="product-label">OPT-GW-6E (FIBER + 5G SIM DUAL LINK ACTIVE)</span>
                   </div>
 
                   <div className="detail-content">
@@ -973,7 +973,7 @@ Diagnosis for **${deviceId}**:
                       <p><strong>Firmware Version:</strong> <span className={selectedDevice.firmware_version !== '3.2.1' ? 'fw-warning' : ''}>{selectedDevice.firmware_version}</span></p>
                     </div>
                     <div className="detail-col">
-                      <p><strong>Link State:</strong> <span className={`link-state-badge ${selectedDevice.event_type.toLowerCase()}`}>{selectedDevice.event_type === 'WIFI_TO_LTE' ? 'Verizon 5G SIM' : 'Primary Fiber/Cable'}</span></p>
+                      <p><strong>Link State:</strong> <span className={`link-state-badge ${selectedDevice.event_type.toLowerCase()}`}>{selectedDevice.event_type === 'WIFI_TO_LTE' ? 'CellLink 5G SIM' : 'Primary Fiber/Cable'}</span></p>
                       <p><strong>Cable Modem Online:</strong> <span className={`modem-state-badge ${selectedDevice.cable_modem_status.toLowerCase()}`}>{selectedDevice.cable_modem_status}</span></p>
                       <p><strong>LTE Duration:</strong> {selectedDevice.duration_on_lte_minutes} minutes</p>
                       {selectedDevice.requires_truck_roll && (
@@ -1060,7 +1060,7 @@ Diagnosis for **${deviceId}**:
               ) : (
                 <div className="chat-console-box">
                   <div className="chat-panel">
-                    <h2>🗼 Paul Edworth Orchestrator Console (A2A Routing)</h2>
+                    <h2>🗼 NetOrchestrator Orchestrator Console (A2A Routing)</h2>
                     <div className="chat-messages">
                       {chatMessages.map((msg, i) => (
                         <div key={i} className={`message ${msg.role}`}>
@@ -1074,7 +1074,7 @@ Diagnosis for **${deviceId}**:
                         value={chatInput}
                         onChange={e => setChatInput(e.target.value)}
                         onKeyPress={e => e.key === 'Enter' && sendChat()}
-                        placeholder="Ask Paul to run diagnostics or check status..."
+                        placeholder="Ask NetOrchestrator to run diagnostics or check status..."
                       />
                       <button onClick={sendChat} className="btn btn-primary">Send</button>
                     </div>
@@ -1156,7 +1156,7 @@ Diagnosis for **${deviceId}**:
                     <strong>Flag:</strong> The system checks duration on LTE. If it exceeds the thresholds (GREEN &lt; 60m, YELLOW 60-90m, RED &gt; 90m), it triggers the AI Agent.
                   </li>
                   <li>
-                    <strong>Diagnose:</strong> Paul Edworth (Master Orchestrator) intercepts the alert, reads the agent card, and delegates to the Invincible WiFi Agent.
+                    <strong>Diagnose:</strong> NetOrchestrator (Master Orchestrator) intercepts the alert, reads the agent card, and delegates to the SmartEdge Diagnostics Agent.
                   </li>
                   <li>
                     <strong>Execute Tools:</strong> The WiFi Agent invokes tools to fetch data from Aurora, DynamoDB, and Neptune.
@@ -1195,12 +1195,12 @@ Diagnosis for **${deviceId}**:
                     <div className="comp-detail">
                       <span className="compliance-badge compliant">Compliant</span>
                       <h3>Story 1: Agent-to-Agent (A2A) Discovery Protocol</h3>
-                      <p><strong>Goal:</strong> Allow the master orchestrator AI agent (Paul Edworth) to query our capabilities, inputs, outputs, and invoke our agent automatically.</p>
+                      <p><strong>Goal:</strong> Allow the master orchestrator AI agent (NetOrchestrator) to query our capabilities, inputs, outputs, and invoke our agent automatically.</p>
                       <p><strong>Implementation:</strong> Expose a GET <code>/</code> route returning a machine-readable <code>agent_card.json</code> detailing capabilities and skills. Expose task handlers at POST <code>/a2a/tasks/send</code>.</p>
                       <div className="code-box-header">agent_card.json</div>
                       <pre className="code-box">
 {`{
-  "name": "Invincible WiFi Agent",
+  "name": "SmartEdge Diagnostics Agent",
   "version": "2.0.0",
   "skills": [
     {
@@ -1218,7 +1218,7 @@ Diagnosis for **${deviceId}**:
                       <span className="compliance-badge compliant">Compliant</span>
                       <h3>Story 2: Pydantic Validation Models</h3>
                       <p><strong>Goal:</strong> Replace raw Python dictionaries with structured, type-safe data schemas. Raise immediate validation errors for invalid inputs.</p>
-                      <p><strong>Implementation:</strong> Built Pydantic models with custom validators (regex validation checking the <code>INV-WIFI-XXXXXXXXXX</code> ID format) in [requests.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/models/requests.py) and [responses.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/models/responses.py).</p>
+                      <p><strong>Implementation:</strong> Built Pydantic models with custom validators (regex validation checking the <code>SE-GW-XXXXXXXXXX</code> ID format) in [requests.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/models/requests.py) and [responses.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/models/responses.py).</p>
                       <div className="code-box-header">requests.py (Pydantic validator)</div>
                       <pre className="code-box">
 {`class DeviceAnalysisRequest(BaseModel):
@@ -1228,9 +1228,9 @@ Diagnosis for **${deviceId}**:
     @field_validator("device_id")
     @classmethod
     def validate_device_id(cls, v: str) -> str:
-        pattern = r'^INV-WIFI-\\d{10}$'
+        pattern = r'^SE-GW-\\d{10}$'
         if not re.match(pattern, v):
-            raise ValueError("Must match INV-WIFI-XXXXXXXXXX format")
+            raise ValueError("Must match SE-GW-XXXXXXXXXX format")
         return v`}
                       </pre>
                     </div>
@@ -1261,10 +1261,10 @@ def get_device_lte_duration(device_id: str) -> dict:
                       <span className="compliance-badge compliant">Compliant</span>
                       <h3>Story 4: Factory Pattern Session Isolation</h3>
                       <p><strong>Goal:</strong> Dynamically instantiate a fresh Agent instance for each unique user connection or request ID to prevent context leakage between NOC engineers.</p>
-                      <p><strong>Implementation:</strong> Written `create_invincible_wifi_agent` factory function in [factory.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/agent/factory.py) which takes `session_id` and registers isolated conversation memory.</p>
+                      <p><strong>Implementation:</strong> Written `create_smartedge_diagnostics_agent` factory function in [factory.py](file:///c:/Users/navee/AI-ops-network-intelligence/src/agent/factory.py) which takes `session_id` and registers isolated conversation memory.</p>
                       <div className="code-box-header">factory.py (Story 4 Agent factory)</div>
                       <pre className="code-box">
-{`def create_invincible_wifi_agent(
+{`def create_smartedge_diagnostics_agent(
     session_id: Optional[str] = None,
     user_context: Optional[dict] = None
 ) -> Agent:
@@ -1307,10 +1307,10 @@ def get_device_lte_duration(device_id: str) -> dict:
                       <p><strong>Implementation:</strong> Defined resource blocks in [main.tf](file:///c:/Users/navee/AI-ops-network-intelligence/infra/main.tf) declaring ECS Task Definitions, ECS Fargate services, and IAM policies for Bedrock Nova model invocations.</p>
                       <div className="code-box-header">main.tf (Terraform Fargate definition)</div>
                       <pre className="code-box">
-{`resource "aws_ecs_service" "invincible_wifi_agent" {
-  name            = "invincible-wifi-agent-\${lower(var.environment)}"
+{`resource "aws_ecs_service" "smartedge_gateway_agent" {
+  name            = "smartedge-gateway-agent-\${lower(var.environment)}"
   cluster         = aws_ecs_cluster.aiops.id
-  task_definition = aws_ecs_task_definition.invincible_wifi_agent.arn
+  task_definition = aws_ecs_task_definition.smartedge_gateway_agent.arn
   launch_type     = "FARGATE"
   desired_count   = var.environment == "PROD" ? 3 : 1
 }`}

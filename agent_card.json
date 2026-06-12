@@ -1,9 +1,9 @@
 {
-  "name": "Invincible WiFi Agent",
-  "description": "AIOps diagnostic agent for the Enterprise's Invincible WiFi product. Analyzes devices stuck on LTE (5G SIM) instead of switching back to fiber. Determines root cause and recommends least-disruptive resolution to avoid truck rolls.",
+  "name": "SmartEdge Diagnostics Agent",
+  "description": "AIOps diagnostic agent for the Enterprise's SmartEdge Gateway product. Analyzes devices stuck on LTE (5G SIM) instead of switching back to fiber. Determines root cause and recommends least-disruptive resolution to avoid truck rolls.",
   "version": "2.0.0",
-  "url": "https://agent.aiops.enterprise.internal/invincible-wifi",
-  "documentationUrl": "https://confluence.enterprise.internal/aiops/invincible-wifi",
+  "url": "https://agent.aiops.enterprise.internal/smartedge-gateway",
+  "documentationUrl": "https://confluence.enterprise.internal/aiops/smartedge-gateway",
   "provider": {
     "organization": "Enterprise AIOps Team"
   },
@@ -21,12 +21,12 @@
     {
       "id": "analyze_device_lte_duration",
       "name": "Analyze Device LTE Duration",
-      "description": "Determines how long a specific Invincible WiFi device has been stuck on LTE instead of fiber, identifies root cause, and recommends action. Severity: GREEN (<60min), YELLOW (60-90min), RED (>90min).",
-      "tags": ["invincible-wifi", "lte", "diagnosis", "device"],
+      "description": "Determines how long a specific SmartEdge Gateway device has been stuck on LTE instead of fiber, identifies root cause, and recommends action. Severity: GREEN (<60min), YELLOW (60-90min), RED (>90min).",
+      "tags": ["smartedge-gateway", "lte", "diagnosis", "device"],
       "examples": [
-        "Why is device INV-WIFI-1234567890 stuck on LTE?",
-        "Analyze device INV-WIFI-1234567890 for today",
-        "Check if customer's Invincible WiFi device needs a truck roll"
+        "Why is device SE-GW-1234567890 stuck on LTE?",
+        "Analyze device SE-GW-1234567890 for today",
+        "Check if customer's SmartEdge Gateway device needs a truck roll"
       ],
       "inputModes": ["application/json", "text/plain"],
       "outputModes": ["application/json"]
@@ -34,8 +34,8 @@
     {
       "id": "bulk_device_analysis",
       "name": "Bulk Device Analysis",
-      "description": "Analyzes multiple Invincible WiFi devices at once. Returns prioritized list of devices needing attention, sorted by severity and cost impact.",
-      "tags": ["invincible-wifi", "bulk", "analysis"],
+      "description": "Analyzes multiple SmartEdge Gateway devices at once. Returns prioritized list of devices needing attention, sorted by severity and cost impact.",
+      "tags": ["smartedge-gateway", "bulk", "analysis"],
       "inputModes": ["application/json"],
       "outputModes": ["application/json"]
     },
@@ -43,7 +43,7 @@
       "id": "recommend_remediation",
       "name": "Recommend Remediation",
       "description": "Given a device ID and diagnosed root cause, generates step-by-step customer-facing troubleshooting instructions. Prioritizes self-service. Only recommends truck roll as last resort.",
-      "tags": ["invincible-wifi", "remediation", "customer"],
+      "tags": ["smartedge-gateway", "remediation", "customer"],
       "inputModes": ["application/json"],
       "outputModes": ["application/json"]
     }

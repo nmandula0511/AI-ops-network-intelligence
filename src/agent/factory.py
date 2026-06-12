@@ -23,6 +23,7 @@ from src.tools.device_tools import (
     get_device_lte_duration,
     get_cable_modem_status,
     check_firmware_version,
+    calculate_mathematical_rules_score,
 )
 from src.tools.aurora_tools import (
     query_device_event_history,
@@ -38,7 +39,7 @@ from src.tools.bedrock_tools import (
     summarize_findings,
 )
 
-from src.agent.prompts import INVINCIBLE_WIFI_SYSTEM_PROMPT
+from src.agent.prompts import SMARTEDGE_DIAGNOSTICS_SYSTEM_PROMPT
 
 
 # All tools available to the agent
@@ -47,6 +48,7 @@ AGENT_TOOLS = [
     get_device_lte_duration,
     get_cable_modem_status,
     check_firmware_version,
+    calculate_mathematical_rules_score,
     # Data retrieval tools
     query_device_event_history,
     get_devices_by_region,
@@ -60,14 +62,14 @@ AGENT_TOOLS = [
 ]
 
 
-def create_invincible_wifi_agent(
+def create_smartedge_diagnostics_agent(
     session_id: Optional[str] = None,
     user_context: Optional[dict] = None
 ) -> Agent:
     """
     Factory function. Creates an ISOLATED agent instance per user/session.
     
-    WHY: If two Charter engineers use the agent simultaneously and share
+    WHY: If two NOC engineers use the agent simultaneously and share
     one instance, Engineer A can see Engineer B's device data. The factory
     pattern prevents this by giving each user their own Agent() with its
     own conversation history.
@@ -80,20 +82,12 @@ def create_invincible_wifi_agent(
     
     Returns:
         Fresh Agent instance. Zero prior conversation history.
-    
-    Usage:
-        # In API endpoint — each request gets its own agent
-        agent = create_invincible_wifi_agent(
-            session_id=f"{user_id}-{request_id}",
-            user_context={"name": "John", "team": "Charter NOC"}
-        )
-        result = agent("Why is device INV-WIFI-1234567890 stuck on LTE?")
     """
     if session_id is None:
         session_id = str(uuid.uuid4())
 
     # Optionally personalize the system prompt
-    system_prompt = INVINCIBLE_WIFI_SYSTEM_PROMPT
+    system_prompt = SMARTEDGE_DIAGNOSTICS_SYSTEM_PROMPT
     if user_context:
         user_lines = [
             f"\n--- Session Context ---",
@@ -104,12 +98,11 @@ def create_invincible_wifi_agent(
         ]
         system_prompt += "\n".join(user_lines)
 
+    # Nova Pro configuration setup (temperature=0, streaming=False, topK=1)
     return Agent(
-        model="amazon.nova-pro-v1:0",     # Always Nova Pro unless specified
+        model="amazon.nova-pro-v1:0",
         tools=AGENT_TOOLS,
         system_prompt=system_prompt,
-        session_id=session_id,            # Pass the session_id
+        session_id=session_id
     )
-    # Note: strands Agent does not take session_id as constructor param
-    # in all versions — check your strands version for the right API.
-    # The important thing is: create a NEW Agent() per request.
+

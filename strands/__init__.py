@@ -66,8 +66,8 @@ class Agent:
         Executes the agent logic.
         Extracts device_id, gathers telemetry and status, then calls Azure OpenAI or uses custom fallback rules.
         """
-        # Find device ID in prompt (format: INV-WIFI-XXXXXXXXXX)
-        device_match = re.search(r'INV-WIFI-\d{10}', prompt)
+        # Find device ID in prompt (format: SE-GW-XXXXXXXXXX)
+        device_match = re.search(r'SE-GW-\d{10}', prompt)
         device_id = device_match.group(0) if device_match else None
         
         # 1. Gather device metrics using our tools
@@ -196,4 +196,4 @@ Action required: {action}
 Truck roll needed: {requires_roll_str}{reason_str}"""
         
         # General chat response fallback
-        return f"Hello! I am the Invincible WiFi agent. I can help diagnose devices stuck on LTE. Please provide a device ID like INV-WIFI-1234567890."
+        return f"Hello! I am the SmartEdge Diagnostics agent. I can help diagnose devices stuck on LTE. Please provide a device ID like SE-GW-1234567890."

@@ -24,7 +24,7 @@ graph TD
     Buffer -->|Log Processing| Factory{Agent Factory}
     
     subgraph A2A Orchestrator Core
-        Factory -->|Session 1| WiFi[Invincible WiFi Agent]
+        Factory -->|Session 1| WiFi[SmartEdge Diagnostics Agent]
         Factory -->|Session 2| Modem[Cable Modem Agent]
         Factory -->|Session 3| Offload[Mobile Offload Agent]
     end
